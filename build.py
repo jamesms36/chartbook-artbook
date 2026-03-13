@@ -336,7 +336,7 @@ page = f"""<!DOCTYPE html>
   <p class="eyebrow">Adam Tooze · Chartbook</p>
   <h1>Artbook</h1>
   <p>
-    Every issue of <a href="https://adamtooze.substack.com" target="_blank" rel="noopener">Chartbook Top Links</a>
+    Every issue of <a href="https://adamtooze.substack.com" target="_blank" rel="noopener">Chartbook</a>
     opens with a work of art. This is a gallery of those selections.
   </p>
   <p class="count">{count} artworks</p>
