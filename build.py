@@ -145,17 +145,17 @@ page = f"""<!DOCTYPE html>
       padding: 3rem 1.5rem 5rem;
       max-width: 1400px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.25rem;
-      align-items: start;
+      columns: 2;
+      column-gap: 1.25rem;
     }}
 
-    @media (min-width: 900px)  {{ .gallery {{ grid-template-columns: repeat(3, 1fr); }} }}
-    @media (min-width: 1200px) {{ .gallery {{ grid-template-columns: repeat(4, 1fr); }} }}
+    @media (min-width: 900px)  {{ .gallery {{ columns: 3; }} }}
+    @media (min-width: 1200px) {{ .gallery {{ columns: 4; }} }}
 
     /* ── Card ── */
     .card {{
+      break-inside: avoid;
+      margin-bottom: 1.25rem;
       background: var(--card-bg);
       border-radius: 4px;
       overflow: hidden;
