@@ -156,17 +156,21 @@ page = f"""<!DOCTYPE html>
       padding: 3rem 1.5rem 5rem;
       max-width: 1400px;
       margin: 0 auto;
-      columns: 2;
-      column-gap: 1.25rem;
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
     }}
 
-    @media (min-width: 900px)  {{ .gallery {{ columns: 3; }} }}
-    @media (min-width: 1200px) {{ .gallery {{ columns: 4; }} }}
+    .gallery-col {{
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }}
 
     /* ── Card ── */
     .card {{
-      break-inside: avoid;
-      margin-bottom: 1.25rem;
       background: var(--card-bg);
       border-radius: 4px;
       overflow: hidden;
@@ -362,21 +366,6 @@ page = f"""<!DOCTYPE html>
 <script>
 {cards_js}
 
-// Reorder items so CSS columns (which fills top→bottom per column)
-// ends up reading roughly left→right: 1,2,3,4 / 5,6,7,8 / ...
-function reorderForColumns(items, cols) {{
-  if (cols <= 1) return items;
-  const rows = Math.ceil(items.length / cols);
-  const out = [];
-  for (let col = 0; col < cols; col++) {{
-    for (let row = 0; row < rows; row++) {{
-      const i = row * cols + col;
-      if (i < items.length) out.push(items[i]);
-    }}
-  }}
-  return out;
-}}
-
 function getColCount() {{
   const w = window.innerWidth;
   if (w >= 1200) return 4;
@@ -421,9 +410,19 @@ let currentSort = 'issue-desc';
 
 function renderGallery() {{
   const cols = getColCount();
-  const ordered = reorderForColumns(sortedArtworks(currentSort), cols);
+  const items = sortedArtworks(currentSort);
   gallery.innerHTML = '';
-  ordered.forEach(art => gallery.appendChild(makeCard(art)));
+  // Create one div per column
+  const colEls = Array.from({{length: cols}}, () => {{
+    const d = document.createElement('div');
+    d.className = 'gallery-col';
+    gallery.appendChild(d);
+    return d;
+  }});
+  // Distribute round-robin: item 0→col0, item 1→col1, ..., item cols→col0, ...
+  // This guarantees consecutive items land in adjacent columns, so reading
+  // left-to-right across any visual band is roughly chronological.
+  items.forEach((art, i) => colEls[i % cols].appendChild(makeCard(art)));
 }}
 
 document.querySelectorAll('.sort-btn').forEach(btn => {{
