@@ -5,7 +5,8 @@ Run this after scrape.py to regenerate the site.
 """
 
 import json
-import html
+import re
+from urllib.parse import unquote
 
 with open("artworks.json") as f:
     artworks = json.load(f)
@@ -16,15 +17,25 @@ artworks.sort(key=lambda x: x.get("issue_num", 0), reverse=True)
 def js_str(s):
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ").replace("\r", "")
 
+def img_dims(url):
+    """Extract WxH from embedded S3 filename, e.g. _1300x952.png"""
+    m = re.search(r'_(\d+)x(\d+)\.(png|jpe?g|webp)', unquote(url), re.I)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+    return None, None
+
 cards_js = "const artworks = [\n"
 for a in artworks:
+    w, h = img_dims(a['img'])
+    ratio = f"{w}/{h}" if w and h else "4/3"
     cards_js += f"""  {{
     issue: "{js_str(a['issue'])}",
     issue_num: {a.get('issue_num', 0)},
     artist: "{js_str(a['artist'])}",
     title: "{js_str(a['title'])}",
     img: "{js_str(a['img'])}",
-    url: "{js_str(a['url'])}"
+    url: "{js_str(a['url'])}",
+    ratio: "{ratio}"
   }},\n"""
 cards_js += "];"
 
@@ -163,6 +174,12 @@ page = f"""<!DOCTYPE html>
       text-decoration: none;
       color: inherit;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }}
+
+    .card img {{
+      width: 100%;
+      height: auto;
+      display: block;
     }}
 
     .card:hover {{
@@ -345,13 +362,33 @@ page = f"""<!DOCTYPE html>
 <script>
 {cards_js}
 
+// Reorder items so CSS columns (which fills top→bottom per column)
+// ends up reading roughly left→right: 1,2,3,4 / 5,6,7,8 / ...
+function reorderForColumns(items, cols) {{
+  if (cols <= 1) return items;
+  const rows = Math.ceil(items.length / cols);
+  const out = [];
+  for (let col = 0; col < cols; col++) {{
+    for (let row = 0; row < rows; row++) {{
+      const i = row * cols + col;
+      if (i < items.length) out.push(items[i]);
+    }}
+  }}
+  return out;
+}}
+
+function getColCount() {{
+  const w = window.innerWidth;
+  if (w >= 1200) return 4;
+  if (w >= 900)  return 3;
+  return 2;
+}}
+
 function sortedArtworks(mode) {{
   const a = artworks.slice();
-  if (mode === 'issue-desc') {{
-    a.sort((x, y) => y.issue_num - x.issue_num);
-  }} else if (mode === 'issue-asc') {{
-    a.sort((x, y) => x.issue_num - y.issue_num);
-  }} else if (mode === 'random') {{
+  if (mode === 'issue-desc') a.sort((x, y) => y.issue_num - x.issue_num);
+  else if (mode === 'issue-asc') a.sort((x, y) => x.issue_num - y.issue_num);
+  else if (mode === 'random') {{
     for (let i = a.length - 1; i > 0; i--) {{
       const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
@@ -367,7 +404,8 @@ function makeCard(art) {{
   card.setAttribute('role', 'button');
   card.setAttribute('aria-label', art.title + ' by ' + art.artist);
   card.innerHTML = `
-    <img src="${{art.img}}" alt="${{art.title}} — ${{art.artist}}" loading="lazy" />
+    <img src="${{art.img}}" alt="${{art.title}} — ${{art.artist}}"
+         loading="lazy" style="aspect-ratio:${{art.ratio}}" />
     <div class="card-caption">
       <div class="card-issue">${{art.issue}}</div>
       <div class="card-title">${{art.title}}</div>
@@ -382,9 +420,10 @@ const gallery = document.getElementById('gallery');
 let currentSort = 'issue-desc';
 
 function renderGallery() {{
-  const sorted = sortedArtworks(currentSort);
+  const cols = getColCount();
+  const ordered = reorderForColumns(sortedArtworks(currentSort), cols);
   gallery.innerHTML = '';
-  sorted.forEach(art => gallery.appendChild(makeCard(art)));
+  ordered.forEach(art => gallery.appendChild(makeCard(art)));
 }}
 
 document.querySelectorAll('.sort-btn').forEach(btn => {{
@@ -398,6 +437,12 @@ document.querySelectorAll('.sort-btn').forEach(btn => {{
 }});
 
 renderGallery();
+
+let resizeTimer;
+window.addEventListener('resize', () => {{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderGallery, 150);
+}});
 
 // Lightbox
 const lightbox = document.getElementById('lightbox');
