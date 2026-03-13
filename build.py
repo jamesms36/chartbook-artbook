@@ -258,35 +258,40 @@ page = f"""<!DOCTYPE html>
     .lightbox-inner {{
       position: relative;
       max-width: 90vw;
-      max-height: 90vh;
+      max-height: 92vh;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1.2rem;
       cursor: default;
+      padding-bottom: 0.5rem;
     }}
 
     .lightbox-inner img {{
       max-width: 100%;
-      max-height: 75vh;
+      max-height: 65vh;
       object-fit: contain;
       border-radius: 2px;
       box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+      flex-shrink: 0;
     }}
 
     .lightbox-info {{
       text-align: center;
+      color: #e8e4dc;
     }}
 
     .lightbox-info .lb-title {{
       font-size: 1.1rem;
       font-style: italic;
       margin-bottom: 0.3rem;
+      color: #e8e4dc;
     }}
 
     .lightbox-info .lb-artist {{
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #aaa;
       font-family: 'Helvetica Neue', sans-serif;
       margin-bottom: 0.6rem;
     }}
