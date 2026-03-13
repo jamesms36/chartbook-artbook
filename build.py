@@ -270,32 +270,6 @@ page = f"""<!DOCTYPE html>
     }}
     .lightbox-close:hover {{ color: var(--text); }}
 
-    /* ── Load more ── */
-    #load-more-wrap {{
-      text-align: center;
-      padding: 0 0 4rem;
-    }}
-    #load-more {{
-      background: none;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      font-family: 'Helvetica Neue', sans-serif;
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 0.6rem 1.6rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }}
-    #load-more:hover {{
-      background: var(--accent);
-      color: #111;
-    }}
-    #load-more:disabled {{
-      opacity: 0.3;
-      cursor: default;
-    }}
   </style>
 </head>
 <body>
@@ -311,7 +285,6 @@ page = f"""<!DOCTYPE html>
 </header>
 
 <main class="gallery" id="gallery"></main>
-<div id="load-more-wrap"><button id="load-more">Load more</button></div>
 
 <footer>
   Art selections by <a href="https://adamtooze.substack.com" target="_blank" rel="noopener">Adam Tooze</a> ·
@@ -376,29 +349,15 @@ function makeCard(art) {{
 }}
 
 const gallery = document.getElementById('gallery');
-const btn = document.getElementById('load-more');
-const PAGE = 80;
-let loaded = 0;
-let orderedArtworks = [];
-
-function renderBatch() {{
-  const batch = orderedArtworks.slice(loaded, loaded + PAGE);
-  batch.forEach(art => gallery.appendChild(makeCard(art)));
-  loaded += batch.length;
-  if (loaded >= orderedArtworks.length) btn.disabled = true;
-}}
 
 function renderGallery() {{
   const cols = getColCount();
-  orderedArtworks = reorderForColumns(artworks, cols);
+  const ordered = reorderForColumns(artworks, cols);
   gallery.innerHTML = '';
-  loaded = 0;
-  btn.disabled = false;
-  renderBatch();
+  ordered.forEach(art => gallery.appendChild(makeCard(art)));
 }}
 
 renderGallery();
-btn.addEventListener('click', renderBatch);
 
 let resizeTimer;
 window.addEventListener('resize', () => {{
