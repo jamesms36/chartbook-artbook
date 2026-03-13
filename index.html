@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chartbook Artbook</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #111;
+      --card-bg: #1c1c1c;
+      --text: #e8e4dc;
+      --muted: #888;
+      --accent: #c9a96e;
+      --border: #2a2a2a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Georgia', serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 4rem 2rem 3rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    header .eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    header h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.2rem;
+    }
+
+    header p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+      font-style: italic;
+    }
+
+    header p a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    header p a:hover { text-decoration: underline; }
+
+    /* ── Gallery ── */
+    .gallery {
+      padding: 3rem 1.5rem 5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      columns: 1;
+      column-gap: 1.25rem;
+    }
+
+    @media (min-width: 600px)  { .gallery { columns: 2; } }
+    @media (min-width: 900px)  { .gallery { columns: 3; } }
+    @media (min-width: 1200px) { .gallery { columns: 4; } }
+
+    /* ── Card ── */
+    .card {
+      break-inside: avoid;
+      margin-bottom: 1.25rem;
+      background: var(--card-bg);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+
+    .card img {
+      width: 100%;
+      display: block;
+      background: #222;
+    }
+
+    .card-caption {
+      padding: 1rem 1.1rem 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-issue {
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-family: 'Helvetica Neue', sans-serif;
+      margin-bottom: 0.4rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      font-style: italic;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-artist {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: 'Helvetica Neue', sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.93);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      padding: 2rem;
+    }
+    .lightbox.open { display: flex; }
+
+    .lightbox-inner {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      cursor: default;
+    }
+
+    .lightbox-inner img {
+      max-width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+      border-radius: 2px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+    }
+
+    .lightbox-info {
+      text-align: center;
+    }
+
+    .lightbox-info .lb-title {
+      font-size: 1.1rem;
+      font-style: italic;
+      margin-bottom: 0.3rem;
+    }
+
+    .lightbox-info .lb-artist {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-family: 'Helvetica Neue', sans-serif;
+      margin-bottom: 0.6rem;
+    }
+
+    .lightbox-info .lb-link {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      font-family: 'Helvetica Neue', sans-serif;
+      border: 1px solid var(--accent);
+      padding: 0.35rem 0.8rem;
+      border-radius: 2px;
+      display: inline-block;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lightbox-info .lb-link:hover {
+      background: var(--accent);
+      color: #111;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.8rem;
+      cursor: pointer;
+      line-height: 1;
+      z-index: 1001;
+    }
+    .lightbox-close:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Adam Tooze · Chartbook</p>
+  <h1>Artbook</h1>
+  <p>
+    Every issue of <a href="https://adamtooze.substack.com" target="_blank" rel="noopener">Chartbook Top Links</a>
+    opens with a work of art. This is a gallery of those selections.
+  </p>
+</header>
+
+<main class="gallery" id="gallery">
+  <!-- Cards injected by JS -->
+</main>
+
+<footer>
+  Art selections by <a href="https://adamtooze.substack.com" target="_blank" rel="noopener">Adam Tooze</a> ·
+  <a href="https://adamtooze.substack.com/archive?sort=new" target="_blank" rel="noopener">Browse all issues</a>
+</footer>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <button class="lightbox-close" id="lb-close" aria-label="Close">&times;</button>
+  <div class="lightbox-inner" id="lb-inner" onclick="event.stopPropagation()">
+    <img id="lb-img" src="" alt="" />
+    <div class="lightbox-info">
+      <div class="lb-title" id="lb-title"></div>
+      <div class="lb-artist" id="lb-artist"></div>
+      <a class="lb-link" id="lb-link" href="#" target="_blank" rel="noopener">Read issue ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const artworks = [
+  {
+    issue: "Chartbook Top Links 1040",
+    artist: "John Mohl",
+    title: "The Moon behind the Miners, Crown Mines (SA)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F9756a129-1eff-45a4-8ef2-9ab3beb2bfb3_1300x952.png",
+    url: "https://adamtooze.substack.com/p/top-links-1040-tax-the-billionaires"
+  },
+  {
+    issue: "Chartbook Top Links 1039",
+    artist: "Albert Dubois-Pillet",
+    title: "Forges à Ivry (1888–89)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F2f614346-a55a-491a-b164-84a19aa9674b_1598x1204.png",
+    url: "https://adamtooze.substack.com/p/top-links-1039-oil-profit-spikes"
+  },
+  {
+    issue: "Chartbook Top Links 1038",
+    artist: "Ed Singer",
+    title: "Avatar (1981)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F862e1219-dca5-4f6b-a24c-1bee9942befa_786x1050.png",
+    url: "https://adamtooze.substack.com/p/top-links-1038-oil-loses-its-bite"
+  },
+  {
+    issue: "Chartbook Top Links 1037",
+    artist: "Antonio Berni",
+    title: "Untitled — Patton, MacArthur and Montgomery",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fcff320a6-85cf-4f23-aff6-0d538421aa67_886x1154.png",
+    url: "https://adamtooze.substack.com/p/top-links-1037-how-bad-is-a-closure"
+  },
+  {
+    issue: "Chartbook Top Links 1036",
+    artist: "José Bedia",
+    title: "Cumpliendo un destino inexorable",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F53d67178-8273-4209-9320-d564571c387d_1786x986.png",
+    url: "https://adamtooze.substack.com/p/top-links-1036-indias-trade-deficit"
+  },
+  {
+    issue: "Chartbook Top Links 1035",
+    artist: "Uzo Egonu",
+    title: "Woman in Grief (1968)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F4cdea471-fe41-49a0-8725-a2cccdd6c066_1550x622.png",
+    url: "https://adamtooze.substack.com/p/top-links-1035-chinese-and-american"
+  },
+  {
+    issue: "Chartbook Top Links 1034",
+    artist: "Peter de Francia",
+    title: "The Bombing of Sakiet (1959)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Ffc93021d-8532-4336-84fa-23157cb4943c_2288x1180.png",
+    url: "https://adamtooze.substack.com/p/top-links-1034-the-public-land-divide"
+  },
+  {
+    issue: "Chartbook Top Links 1033",
+    artist: "John Flaxman RA",
+    title: "Lampetia Complaining to Apollo (1792–93)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Ffb1d3ad6-ea5f-496a-aed2-7e07d1fab58e_1858x1188.png",
+    url: "https://adamtooze.substack.com/p/top-links-1033-the-midwest-stabilizes"
+  },
+  {
+    issue: "Chartbook Top Links 1032",
+    artist: "Lucian Freud",
+    title: "Man's Head, Self Portrait (1963)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F01191f05-4d0c-4bb2-9fd0-58aca759a5aa_884x900.png",
+    url: "https://adamtooze.substack.com/p/top-links-1032-hormuz-to-asia-cuba"
+  },
+  {
+    issue: "Chartbook Top Links 1031",
+    artist: "Elias Jengo",
+    title: "Family of Sculpture",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Ffd8df6b0-8c4a-4e71-978e-971d1eca57ac_1580x1120.png",
+    url: "https://adamtooze.substack.com/p/top-links-1031-making-of-contemporary"
+  },
+  {
+    issue: "Chartbook Top Links 1030",
+    artist: "Artist unknown",
+    title: "President Nyerere and His Advocates, 1957",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fb2843cbc-20d6-4aba-8f68-0e4868c361f7_1270x992.png",
+    url: "https://adamtooze.substack.com/p/top-links-1030-president-nyerere"
+  },
+  {
+    issue: "Chartbook Top Links 1029",
+    artist: "Sam Ntiro",
+    title: "Agony in the Garden (1950)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fda63d069-6c63-4e80-aab0-c56ba1ea0317_1486x1192.png",
+    url: "https://adamtooze.substack.com/p/top-links-1029-americans-leaving"
+  },
+  {
+    issue: "Chartbook Top Links 1028",
+    artist: "Félix Fénéon",
+    title: "Editing La Revue Blanche (1896)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F99f57d44-c63c-4b4b-bb18-ed61f12e2fca_1490x1202.png",
+    url: "https://adamtooze.substack.com/p/top-links-1028-the-anti-trump-trade"
+  },
+  {
+    issue: "Chartbook Top Links 1027",
+    artist: "Paula Kamps",
+    title: "Changing Faces (2016)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fce90ff67-a9f4-4289-999f-1b86da01c492_970x1208.png",
+    url: "https://adamtooze.substack.com/p/top-links-1027-why-the-us-gas-business"
+  },
+  {
+    issue: "Chartbook Top Links 1026",
+    artist: "Amrita Sher-Gil",
+    title: "Hill Scene (1938)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F44eb2044-8bd1-4a38-affe-67ec59284121_1114x1484.png",
+    url: "https://adamtooze.substack.com/p/top-link-1026-billionaire-women-why"
+  },
+  {
+    issue: "Chartbook Top Links 1025",
+    artist: "Artist unknown",
+    title: "Featured artwork",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fb8c8403a-7fe8-41e5-8227-0814c217e1c1_830x1068.png",
+    url: "https://adamtooze.substack.com/p/top-links-1025-late-german-government"
+  },
+  {
+    issue: "Chartbook Top Links 1019",
+    artist: "Yusman Aman",
+    title: "Rhythm in Blue, Singapore (1972)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3cc35ef7-5637-4b47-80fb-d72c769ea74b_694x1002.png",
+    url: "https://adamtooze.substack.com/p/top-links-1019-american-financials"
+  },
+  {
+    issue: "Chartbook Top Links 1018",
+    artist: "Tan Lip Seng",
+    title: "Iron and Steel (1970)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1b2375f4-be17-446c-bc7b-28434cf90dcc_1762x1156.png",
+    url: "https://adamtooze.substack.com/p/top-links-1018-the-geography-of-us"
+  },
+  {
+    issue: "Chartbook Top Links 1017",
+    artist: "Georgette Chen",
+    title: "Lotus Symphony (1962)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F879c0993-1d36-4517-90ea-bbd9af76c5ef_1932x740.png",
+    url: "https://adamtooze.substack.com/p/top-links-1017-bankers-dethroned"
+  },
+  {
+    issue: "Chartbook Top Links 1016",
+    artist: "Tchang Ju Chi",
+    title: "Still Life (1939)",
+    img: "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fd7a6df7f-f048-458d-a02a-e37d893a0063_1356x968.png",
+    url: "https://adamtooze.substack.com/p/top-links-1016-dassault-means-trouble"
+  }
+];
+
+// Build gallery
+const gallery = document.getElementById('gallery');
+
+artworks.forEach((art, i) => {
+  const card = document.createElement('a');
+  card.className = 'card';
+  card.href = '#';
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `${art.title} by ${art.artist}`);
+
+  card.innerHTML = `
+    <img
+      src="${art.img}"
+      alt="${art.title} — ${art.artist}"
+      loading="${i < 6 ? 'eager' : 'lazy'}"
+    />
+    <div class="card-caption">
+      <div class="card-issue">${art.issue}</div>
+      <div class="card-title">${art.title}</div>
+      <div class="card-artist">${art.artist}</div>
+    </div>
+  `;
+
+  card.addEventListener('click', (e) => {
+    e.preventDefault();
+    openLightbox(art);
+  });
+
+  gallery.appendChild(card);
+});
+
+// Lightbox
+const lightbox = document.getElementById('lightbox');
+const lbImg    = document.getElementById('lb-img');
+const lbTitle  = document.getElementById('lb-title');
+const lbArtist = document.getElementById('lb-artist');
+const lbLink   = document.getElementById('lb-link');
+
+function openLightbox(art) {
+  lbImg.src    = art.img;
+  lbImg.alt    = art.title;
+  lbTitle.textContent  = art.title;
+  lbArtist.textContent = `${art.artist}  ·  ${art.issue}`;
+  lbLink.href  = art.url;
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+  lbImg.src = '';
+}
+
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', closeLightbox);
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+
+</body>
+</html>
