@@ -337,7 +337,7 @@ page = f"""<!DOCTYPE html>
   <h1>Artbook</h1>
   <p>
     Every issue of <a href="https://adamtooze.substack.com" target="_blank" rel="noopener">Chartbook</a>
-    opens with a work of art. This is a gallery of those selections.
+    opens with a work of art.<br>This is a gallery of those selections.
   </p>
   <p class="count">{count} artworks</p>
 </header>
