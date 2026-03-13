@@ -20,6 +20,7 @@ cards_js = "const artworks = [\n"
 for a in artworks:
     cards_js += f"""  {{
     issue: "{js_str(a['issue'])}",
+    issue_num: {a.get('issue_num', 0)},
     artist: "{js_str(a['artist'])}",
     title: "{js_str(a['title'])}",
     img: "{js_str(a['img'])}",
@@ -104,6 +105,39 @@ page = f"""<!DOCTYPE html>
       font-family: 'Helvetica Neue', sans-serif;
       font-style: normal;
       letter-spacing: 0.05em;
+    }}
+
+    /* ── Sort bar ── */
+    .sort-bar {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1.75rem 1.5rem 0;
+      max-width: 1400px;
+      margin: 0 auto;
+    }}
+
+    .sort-btn {{
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Helvetica Neue', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.4rem 0.9rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }}
+    .sort-btn:hover {{
+      border-color: var(--accent);
+      color: var(--text);
+    }}
+    .sort-btn.active {{
+      border-color: var(--accent);
+      color: var(--accent);
     }}
 
     /* ── Gallery ── */
@@ -284,6 +318,14 @@ page = f"""<!DOCTYPE html>
   <p class="count">{count} artworks</p>
 </header>
 
+<nav class="sort-bar" aria-label="Sort options">
+  <button class="sort-btn active" data-sort="issue-desc">Issue ↓ Newest</button>
+  <button class="sort-btn" data-sort="issue-asc">Issue ↑ Oldest</button>
+  <button class="sort-btn" data-sort="date-desc">Artwork Date ↓</button>
+  <button class="sort-btn" data-sort="date-asc">Artwork Date ↑</button>
+  <button class="sort-btn" data-sort="random">Random</button>
+</nav>
+
 <main class="gallery" id="gallery"></main>
 
 <footer>
@@ -307,8 +349,19 @@ page = f"""<!DOCTYPE html>
 <script>
 {cards_js}
 
+// Extract best-guess artwork year from title + artist strings
+function artworkYear(art) {{
+  const text = art.title + ' ' + art.artist;
+  // Prefer years in parens like (1968) or at end like ", 1981"
+  const m = text.match(/[\(\s,]([1-2][0-9]{{3}})[\)\s,\.]|([1-2][0-9]{{3}})$/);
+  if (m) return parseInt(m[1] || m[2]);
+  // Any 4-digit year 1000–2025
+  const any = text.match(/\b([1-2][0-9]{{3}})\b/);
+  return any ? parseInt(any[1]) : null;
+}}
+
 // CSS columns fills top-to-bottom per column, so we pre-shuffle items
-// so that reading left-to-right across visual rows stays roughly chronological.
+// so that reading left-to-right across visual rows is roughly in sort order.
 function reorderForColumns(items, cols) {{
   if (cols <= 1) return items;
   const out = [];
@@ -330,6 +383,33 @@ function getColCount() {{
   return 1;
 }}
 
+function sortedArtworks(mode) {{
+  const a = artworks.slice();
+  if (mode === 'issue-desc') {{
+    a.sort((x, y) => y.issue_num - x.issue_num);
+  }} else if (mode === 'issue-asc') {{
+    a.sort((x, y) => x.issue_num - y.issue_num);
+  }} else if (mode === 'date-desc') {{
+    a.sort((x, y) => {{
+      const dy = artworkYear(y) ?? -Infinity;
+      const dx = artworkYear(x) ?? -Infinity;
+      return dy - dx;
+    }});
+  }} else if (mode === 'date-asc') {{
+    a.sort((x, y) => {{
+      const dx = artworkYear(x) ?? Infinity;
+      const dy = artworkYear(y) ?? Infinity;
+      return dx - dy;
+    }});
+  }} else if (mode === 'random') {{
+    for (let i = a.length - 1; i > 0; i--) {{
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }}
+  }}
+  return a;
+}}
+
 function makeCard(art) {{
   const card = document.createElement('a');
   card.className = 'card';
@@ -349,13 +429,26 @@ function makeCard(art) {{
 }}
 
 const gallery = document.getElementById('gallery');
+let currentSort = 'issue-desc';
 
 function renderGallery() {{
   const cols = getColCount();
-  const ordered = reorderForColumns(artworks, cols);
+  const sorted = sortedArtworks(currentSort);
+  const ordered = reorderForColumns(sorted, cols);
   gallery.innerHTML = '';
   ordered.forEach(art => gallery.appendChild(makeCard(art)));
 }}
+
+// Sort buttons
+document.querySelectorAll('.sort-btn').forEach(btn => {{
+  btn.addEventListener('click', () => {{
+    currentSort = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGallery();
+    window.scrollTo({{ top: 0, behavior: 'smooth' }});
+  }});
+}});
 
 renderGallery();
 
