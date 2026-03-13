@@ -145,22 +145,20 @@ page = f"""<!DOCTYPE html>
       padding: 3rem 1.5rem 5rem;
       max-width: 1400px;
       margin: 0 auto;
-      columns: 1;
-      column-gap: 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      align-items: start;
     }}
 
-    @media (min-width: 600px)  {{ .gallery {{ columns: 2; }} }}
-    @media (min-width: 900px)  {{ .gallery {{ columns: 3; }} }}
-    @media (min-width: 1200px) {{ .gallery {{ columns: 4; }} }}
+    @media (min-width: 900px)  {{ .gallery {{ grid-template-columns: repeat(3, 1fr); }} }}
+    @media (min-width: 1200px) {{ .gallery {{ grid-template-columns: repeat(4, 1fr); }} }}
 
     /* ── Card ── */
     .card {{
-      break-inside: avoid;
-      margin-bottom: 1.25rem;
       background: var(--card-bg);
       border-radius: 4px;
       overflow: hidden;
-      position: relative;
       display: block;
       text-decoration: none;
       color: inherit;
@@ -319,10 +317,8 @@ page = f"""<!DOCTYPE html>
 </header>
 
 <nav class="sort-bar" aria-label="Sort options">
-  <button class="sort-btn active" data-sort="issue-desc">Issue ↓ Newest</button>
-  <button class="sort-btn" data-sort="issue-asc">Issue ↑ Oldest</button>
-  <button class="sort-btn" data-sort="date-desc">Artwork Date ↓</button>
-  <button class="sort-btn" data-sort="date-asc">Artwork Date ↑</button>
+  <button class="sort-btn active" data-sort="issue-desc">Newest first</button>
+  <button class="sort-btn" data-sort="issue-asc">Oldest first</button>
   <button class="sort-btn" data-sort="random">Random</button>
 </nav>
 
@@ -349,58 +345,12 @@ page = f"""<!DOCTYPE html>
 <script>
 {cards_js}
 
-// Extract best-guess artwork year from title + artist strings
-function artworkYear(art) {{
-  const text = art.title + ' ' + art.artist;
-  // Prefer years in parens like (1968) or at end like ", 1981"
-  const m = text.match(/[\(\s,]([1-2][0-9]{{3}})[\)\s,\.]|([1-2][0-9]{{3}})$/);
-  if (m) return parseInt(m[1] || m[2]);
-  // Any 4-digit year 1000–2025
-  const any = text.match(/\b([1-2][0-9]{{3}})\b/);
-  return any ? parseInt(any[1]) : null;
-}}
-
-// CSS columns fills top-to-bottom per column, so we pre-shuffle items
-// so that reading left-to-right across visual rows is roughly in sort order.
-function reorderForColumns(items, cols) {{
-  if (cols <= 1) return items;
-  const out = [];
-  const rows = Math.ceil(items.length / cols);
-  for (let col = 0; col < cols; col++) {{
-    for (let row = 0; row < rows; row++) {{
-      const idx = row * cols + col;
-      if (idx < items.length) out.push(items[idx]);
-    }}
-  }}
-  return out;
-}}
-
-function getColCount() {{
-  const w = window.innerWidth;
-  if (w >= 1200) return 4;
-  if (w >= 900)  return 3;
-  if (w >= 600)  return 2;
-  return 1;
-}}
-
 function sortedArtworks(mode) {{
   const a = artworks.slice();
   if (mode === 'issue-desc') {{
     a.sort((x, y) => y.issue_num - x.issue_num);
   }} else if (mode === 'issue-asc') {{
     a.sort((x, y) => x.issue_num - y.issue_num);
-  }} else if (mode === 'date-desc') {{
-    a.sort((x, y) => {{
-      const dy = artworkYear(y) ?? -Infinity;
-      const dx = artworkYear(x) ?? -Infinity;
-      return dy - dx;
-    }});
-  }} else if (mode === 'date-asc') {{
-    a.sort((x, y) => {{
-      const dx = artworkYear(x) ?? Infinity;
-      const dy = artworkYear(y) ?? Infinity;
-      return dx - dy;
-    }});
   }} else if (mode === 'random') {{
     for (let i = a.length - 1; i > 0; i--) {{
       const j = Math.floor(Math.random() * (i + 1));
@@ -432,14 +382,11 @@ const gallery = document.getElementById('gallery');
 let currentSort = 'issue-desc';
 
 function renderGallery() {{
-  const cols = getColCount();
   const sorted = sortedArtworks(currentSort);
-  const ordered = reorderForColumns(sorted, cols);
   gallery.innerHTML = '';
-  ordered.forEach(art => gallery.appendChild(makeCard(art)));
+  sorted.forEach(art => gallery.appendChild(makeCard(art)));
 }}
 
-// Sort buttons
 document.querySelectorAll('.sort-btn').forEach(btn => {{
   btn.addEventListener('click', () => {{
     currentSort = btn.dataset.sort;
@@ -451,12 +398,6 @@ document.querySelectorAll('.sort-btn').forEach(btn => {{
 }});
 
 renderGallery();
-
-let resizeTimer;
-window.addEventListener('resize', () => {{
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(renderGallery, 150);
-}});
 
 // Lightbox
 const lightbox = document.getElementById('lightbox');
