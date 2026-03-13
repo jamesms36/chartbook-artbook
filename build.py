@@ -51,12 +51,12 @@ page = f"""<!DOCTYPE html>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
     :root {{
-      --bg: #111;
-      --card-bg: #1c1c1c;
-      --text: #e8e4dc;
+      --bg: #f5f2ed;
+      --card-bg: #fff;
+      --text: #1a1a1a;
       --muted: #888;
-      --accent: #c9a96e;
-      --border: #2a2a2a;
+      --accent: #8b5e3c;
+      --border: #e0d9d0;
     }}
 
     html {{ scroll-behavior: smooth; }}
@@ -246,7 +246,7 @@ page = f"""<!DOCTYPE html>
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.93);
+      background: rgba(20,15,10,0.95);
       z-index: 1000;
       align-items: center;
       justify-content: center;
